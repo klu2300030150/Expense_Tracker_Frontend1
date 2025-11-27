@@ -43,9 +43,25 @@ pool.getConnection()
     console.error('❌ Database connection failed:', err.message);
   });
 
-// Helper: Generate simple token
+// Helper: Generate simple token (includes usernId for extraction)
 function generateToken(userId) {
   return Buffer.from(`${userId}-${Date.now()}-${Math.random().toString(36)}`).toString('base64');
+}
+
+// Helper: Extract userId from token
+function getUserIdFromToken(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+  try {
+    const token = authHeader.split(' ')[1];
+    const decoded = Buffer.from(token, 'base64').toString('utf8');
+    const userId = decoded.split('-')[0];
+    return parseInt(userId);
+  } catch (e) {
+    return null;
+  }
 }
 
 // ========================
@@ -148,8 +164,26 @@ app.post('/api/auth/login', async (req, res) => {
 // EXPENSE ROUTES
 // ========================
 
-// Get all expenses for a user
-app.get('/api/expenses/:userId', async (req, res) => {
+// Get all expenses (using token)
+app.get('/api/expenses', async (req, res) => {
+  try {
+    const userId = getUserIdFromToken(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized - invalid token' });
+    }
+    const [expenses] = await pool.query(
+      `SELECT * FROM expenses WHERE user_id = ? ORDER BY date DESC, created_at DESC`,
+      [userId]
+    );
+    res.json(expenses);
+  } catch (err) {
+    console.error('Get expenses error:', err);
+    res.status(500).json({ error: 'Failed to fetch expenses' });
+  }
+});
+
+// Get all expenses for a user (with userId in URL)
+app.get('/api/expenses/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const [expenses] = await pool.query(
@@ -163,13 +197,22 @@ app.get('/api/expenses/:userId', async (req, res) => {
   }
 });
 
-// Add expense
+// Add expense (extract userId from token if not in body)
 app.post('/api/expenses', async (req, res) => {
   try {
-    const { userId, amount, description, category, subcategory, date, payment_method, notes } = req.body;
+    let { userId, amount, description, category, subcategory, date, payment_method, notes } = req.body;
 
-    if (!userId || !amount || !date) {
-      return res.status(400).json({ error: 'User ID, amount, and date are required' });
+    // If userId not in body, extract from token
+    if (!userId) {
+      userId = getUserIdFromToken(req);
+    }
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized - no user ID' });
+    }
+
+    if (!amount || !date) {
+      return res.status(400).json({ error: 'Amount and date are required' });
     }
 
     const [result] = await pool.query(
@@ -235,8 +278,26 @@ app.delete('/api/expenses/:id', async (req, res) => {
 // BUDGET ROUTES
 // ========================
 
-// Get budgets for a user
-app.get('/api/budgets/:userId', async (req, res) => {
+// Get budgets (using token)
+app.get('/api/budgets', async (req, res) => {
+  try {
+    const userId = getUserIdFromToken(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const [budgets] = await pool.query(
+      `SELECT * FROM budgets WHERE user_id = ? ORDER BY created_at DESC`,
+      [userId]
+    );
+    res.json(budgets);
+  } catch (err) {
+    console.error('Get budgets error:', err);
+    res.status(500).json({ error: 'Failed to fetch budgets' });
+  }
+});
+
+// Get budgets for a user (with userId in URL)
+app.get('/api/budgets/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const [budgets] = await pool.query(
@@ -253,7 +314,11 @@ app.get('/api/budgets/:userId', async (req, res) => {
 // Add budget
 app.post('/api/budgets', async (req, res) => {
   try {
-    const { userId, category, amount, period, start_date, end_date } = req.body;
+    let { userId, category, amount, period, start_date, end_date } = req.body;
+    
+    if (!userId) {
+      userId = getUserIdFromToken(req);
+    }
 
     if (!userId || !amount) {
       return res.status(400).json({ error: 'User ID and amount are required' });
