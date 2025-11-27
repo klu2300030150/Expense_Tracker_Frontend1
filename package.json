@@ -1,0 +1,45 @@
+{
+  "name": "expense-tracker",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "node server.js",
+    "start": "concurrently \"npm run server\" \"npm run dev\"",
+    "build": "vite build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
+    "db:test": "node scripts/mysql-cli.mjs --test",
+    "db:query": "node scripts/mysql-cli.mjs --query",
+    "db:file": "node scripts/mysql-cli.mjs --file",
+    "db:tables": "node scripts/mysql-cli.mjs --query \"SHOW TABLES\"",
+    "db:seed": "node scripts/mysql-cli.mjs --file ./scripts/seed.sql",
+    "db:schema": "node scripts/mysql-cli.mjs --query \"SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME\"",
+    "db:setup": "npm run db:test && npm run db:seed && npm run db:tables",
+    "db:reset": "node scripts/mysql-cli.mjs --query \"DROP TABLE IF EXISTS activity_log, expenses, budgets, subcategories, categories, users\" && npm run db:seed"
+  },
+  "dependencies": {
+    "@popperjs/core": "^2.11.8",
+    "axios": "^1.6.0",
+    "bcryptjs": "^2.4.3",
+    "bootstrap": "^5.3.8",
+    "concurrently": "^8.2.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
+    "mysql2": "^3.6.5",
+    "react": "^18.2.0",
+    "react-bootstrap": "^2.10.10",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0",
+    "react-toastify": "^11.0.5",
+    "recharts": "^3.3.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.0",
+    "gh-pages": "^6.3.0",
+    "vite": "^5.0.0"
+  }
+}

@@ -1,0 +1,5 @@
+.qa-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.qa-modal { width: 95%; max-width: 460px; border-radius: 16px; padding: 18px; }
+.qa-form { display: grid; gap: 12px; margin-top: 10px; }
+.qa-form input, .qa-form select { background: #1a1f45; color: var(--text); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; }
+.qa-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }

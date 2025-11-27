@@ -1,0 +1,2 @@
+.topbar input::placeholder { color: var(--muted); }
+.topbar .btn { height: 36px; }
