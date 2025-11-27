@@ -16,7 +16,8 @@
     "db:seed": "node scripts/mysql-cli.mjs --file ./scripts/seed.sql",
     "db:schema": "node scripts/mysql-cli.mjs --query \"SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME\"",
     "db:setup": "npm run db:test && npm run db:seed && npm run db:tables",
-    "db:reset": "node scripts/mysql-cli.mjs --query \"DROP TABLE IF EXISTS activity_log, expenses, budgets, subcategories, categories, users\" && npm run db:seed"
+    "db:reset": "node scripts/mysql-cli.mjs --query \"DROP TABLE IF EXISTS activity_log, expenses, budgets, subcategories, categories, users\" && npm run db:seed",
+    "db:users": "node scripts/mysql-cli.mjs --query \"SELECT id, username, email, currency, created_at FROM users\""
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",

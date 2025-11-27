@@ -27,9 +27,8 @@ Thumbs.db
 npm-debug.log*
 logs/
 
-# Backend (exclude from frontend repo)
+# Backend folder (if separate)
 backend/
-server.js
 
 # Misc
 *.tmp
