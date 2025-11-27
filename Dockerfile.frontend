@@ -1,0 +1,10 @@
+# Frontend Dockerfile for Kubernetes
+FROM nginx:alpine
+
+# Copy built frontend files
+COPY dist/ /usr/share/nginx/html/
+
+# Expose port
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
