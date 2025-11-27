@@ -27,11 +27,11 @@ function parseDatabaseUrl(url) {
 const fromUrl = process.env.DATABASE_URL ? parseDatabaseUrl(process.env.DATABASE_URL) : null;
 
 const DB_CONFIG = fromUrl || {
-  host: process.env.MYSQL_HOST || 'localhost',
-  port: parseInt(process.env.MYSQL_PORT || '3306'),
-  user: process.env.MYSQL_USER || 'root',
-  password: process.env.MYSQL_PASSWORD || 'Sreekar@8297',
-  database: process.env.MYSQL_DATABASE || 'expense_tracker'
+  host: process.env.MYSQLHOST || process.env.MYSQL_HOST || 'localhost',
+  port: parseInt(process.env.MYSQLPORT || process.env.MYSQL_PORT || '3306'),
+  user: process.env.MYSQLUSER || process.env.MYSQL_USER || 'root',
+  password: process.env.MYSQLPASSWORD || process.env.MYSQL_PASSWORD || 'Sreekar@8297',
+  database: process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE || 'expense_tracker'
 };
 
 // AWS RDS Details (for reference):
