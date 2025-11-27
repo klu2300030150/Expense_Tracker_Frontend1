@@ -1,0 +1,102 @@
+---
+# MySQL Installation Playbook for Amazon Linux 2
+# Usage: ansible-playbook -i inventory.ini playbooks/install-mysql.yml
+
+- name: Install and Configure MySQL
+  hosts: webservers
+  become: yes
+  gather_facts: yes
+
+  vars_files:
+    - ../group_vars/all.yml
+
+  tasks:
+    # ============================================
+    # MYSQL INSTALLATION
+    # ============================================
+    - name: Download MySQL repository
+      get_url:
+        url: https://dev.mysql.com/get/mysql80-community-release-el7-5.noarch.rpm
+        dest: /tmp/mysql-repo.rpm
+      tags: mysql
+
+    - name: Install MySQL repository
+      yum:
+        name: /tmp/mysql-repo.rpm
+        state: present
+        disable_gpg_check: yes
+      tags: mysql
+
+    - name: Install MySQL server
+      yum:
+        name:
+          - mysql-community-server
+          - mysql-community-client
+        state: present
+      tags: mysql
+
+    - name: Start MySQL service
+      systemd:
+        name: mysqld
+        state: started
+        enabled: yes
+      tags: mysql
+
+    - name: Get MySQL temporary password
+      shell: grep 'temporary password' /var/log/mysqld.log | awk '{print $NF}'
+      register: mysql_temp_password
+      changed_when: false
+      ignore_errors: yes
+      tags: mysql
+
+    - name: Display MySQL temporary password
+      debug:
+        msg: "MySQL temporary password: {{ mysql_temp_password.stdout }}"
+      when: mysql_temp_password.stdout != ""
+      tags: mysql
+
+    # ============================================
+    # MYSQL CONFIGURATION
+    # ============================================
+    - name: Install PyMySQL for Ansible
+      pip:
+        name: PyMySQL
+        state: present
+      tags: mysql
+
+    - name: Create expense_tracker database
+      mysql_db:
+        name: "{{ mysql_database }}"
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+      ignore_errors: yes
+      tags: mysql
+
+    - name: Create application database user
+      mysql_user:
+        name: "{{ mysql_user }}"
+        password: "{{ mysql_password }}"
+        host: '%'
+        priv: "{{ mysql_database }}.*:ALL"
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+      ignore_errors: yes
+      tags: mysql
+
+    # ============================================
+    # FIREWALL CONFIGURATION
+    # ============================================
+    - name: Allow MySQL port through firewall
+      firewalld:
+        port: 3306/tcp
+        permanent: yes
+        state: enabled
+      ignore_errors: yes
+      tags: firewall
+
+    - name: Reload firewalld
+      command: firewall-cmd --reload
+      ignore_errors: yes
+      tags: firewall

@@ -1,0 +1,37 @@
+# Ansible Variables for Expense Tracker Deployment
+# Update these with your actual values
+
+# MySQL/RDS Configuration
+mysql_host: "expense-tracker-db.xxxxxxxxx.us-east-1.rds.amazonaws.com"
+mysql_port: 3306
+mysql_user: "admin"
+mysql_password: "Sreekar8297"
+mysql_database: "expense_tracker"
+mysql_root_password: "Sreekar8297"
+
+# Application Configuration
+app_name: "expense-tracker"
+app_port: 5000
+app_user: "ec2-user"
+app_directory: "/home/ec2-user/Expense_Tracker_Frontend1"
+
+# GitHub Repository
+github_repo: "https://github.com/klu2300030150/Expense_Tracker_Frontend1.git"
+github_branch: "main"
+
+# Node.js Version
+nodejs_version: "18"
+
+# PM2 Process Name
+pm2_app_name: "expense-backend"
+
+# JWT Secret (change in production!)
+jwt_secret: "expense-tracker-secret-key-2024"
+
+# CORS Configuration
+cors_origin: "*"
+
+# Server Configuration
+server_name: "_"
+nginx_root: "/var/www/expense-tracker"
+backend_url: "http://localhost:5000"
