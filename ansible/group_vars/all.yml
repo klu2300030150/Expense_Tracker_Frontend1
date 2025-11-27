@@ -2,11 +2,11 @@
 # Update these with your actual values
 
 # MySQL/RDS Configuration
-mysql_host: "expense-tracker-db.xxxxxxxxx.us-east-1.rds.amazonaws.com"
+mysql_host: "expensetrackerbackend.cxy4ogqqgubd.eu-north-1.rds.amazonaws.com"
 mysql_port: 3306
 mysql_user: "admin"
 mysql_password: "Sreekar8297"
-mysql_database: "expense_tracker"
+mysql_database: "ExpenseTrackerBackend"
 mysql_root_password: "Sreekar8297"
 
 # Application Configuration

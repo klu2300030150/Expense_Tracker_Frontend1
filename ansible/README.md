@@ -58,14 +58,14 @@ Edit `group_vars/all.yml` with your settings:
 
 ```yaml
 # MySQL/RDS Configuration
-mysql_host: "your-rds-endpoint.amazonaws.com"
+mysql_host: "expensetrackerbackend.cxy4ogqqgubd.eu-north-1.rds.amazonaws.com"
 mysql_user: "admin"
 mysql_password: "YourSecurePassword"
-mysql_database: "expense_tracker"
+mysql_database: "ExpenseTrackerBackend"
 
 # Application Settings
 app_port: 5000
-github_repo: "https://github.com/YOUR_USERNAME/YOUR_REPO.git"
+github_repo: "https://github.com/klu2300030150/Expense_Tracker_Frontend1.git"
 ```
 
 ## 📝 Available Playbooks
