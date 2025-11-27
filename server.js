@@ -38,6 +38,9 @@ const DB_CONFIG = fromUrl || {
 // Host: expensetrackerbackend.cxy4ogqqgubd.eu-north-1.rds.amazonaws.com
 // Database: ExpenseTrackerBackend
 
+// Railway MySQL (production):
+// mysql://root:DPHhMBJuYlcQlaeZmXsFGgUZZLkqrhhX@gondola.proxy.rlwy.net:27737/railway
+
 // Middleware - Enhanced CORS for all origins
 app.use(cors({
   origin: '*',
