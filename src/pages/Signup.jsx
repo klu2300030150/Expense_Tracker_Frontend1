@@ -45,28 +45,22 @@ const Signup = ({ setUser }) => {
         currency: formData.currency
       });
       
-      const userData = {
-        token: response.data.token,
-        userId: response.data.userId,
-        fullName: response.data.fullName,
-        email: response.data.email,
-        currency: response.data.currency
-      };
-      
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
-      
-      toast.success(`🎉 Welcome, ${userData.fullName}! Account created successfully!`, {
+      // Don't auto-login - redirect to login page instead
+      toast.success(`🎉 Account created successfully! Please login to continue.`, {
         position: "top-right",
         autoClose: 2000,
       });
       
-      setTimeout(() => navigate('/dashboard'), 1500);
+      // Redirect to login page after signup
+      setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
       console.error('Signup error:', err);
       
       if (err.response?.data) {
-        toast.error(typeof err.response.data === 'string' ? err.response.data : 'Signup failed. Please try again.');
+        const msg = typeof err.response.data === 'string'
+          ? err.response.data
+          : (err.response.data.error || err.response.data.message || 'Signup failed. Please try again.');
+        toast.error(msg);
       } else if (err.request) {
         toast.error('⚠️ No response from server. Please check if backend is running.');
       } else {
