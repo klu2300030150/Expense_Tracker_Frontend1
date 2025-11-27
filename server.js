@@ -6,9 +6,27 @@ import mysql from 'mysql2/promise';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Database Configuration - AWS RDS MySQL
-// Uses environment variables (for Render) or falls back to local
-const DB_CONFIG = {
+// Database Configuration - Uses env vars or falls back to local
+function parseDatabaseUrl(url) {
+  try {
+    const u = new URL(url);
+    // Expect format: mysql://user:pass@host:port/dbname
+    return {
+      host: u.hostname,
+      port: u.port ? parseInt(u.port, 10) : 3306,
+      user: decodeURIComponent(u.username),
+      password: decodeURIComponent(u.password),
+      database: u.pathname.replace(/^\//, '')
+    };
+  } catch (e) {
+    console.warn('Invalid DATABASE_URL, falling back to discrete env vars');
+    return null;
+  }
+}
+
+const fromUrl = process.env.DATABASE_URL ? parseDatabaseUrl(process.env.DATABASE_URL) : null;
+
+const DB_CONFIG = fromUrl || {
   host: process.env.MYSQL_HOST || 'localhost',
   port: parseInt(process.env.MYSQL_PORT || '3306'),
   user: process.env.MYSQL_USER || 'root',
