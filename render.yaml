@@ -2,16 +2,20 @@ services:
   - type: web
     name: expense-tracker-api
     env: node
+    region: oregon
+    plan: free
     buildCommand: npm install
     startCommand: node server.js
     envVars:
-      - key: MYSQL_HOST
+      - key: NODE_ENV
+        value: production
+      - key: MYSQLHOST
         value: gondola.proxy.rlwy.net
-      - key: MYSQL_PORT
-        value: "27737"
-      - key: MYSQL_USER
+      - key: MYSQLPORT
+        value: 47595
+      - key: MYSQLUSER
         value: root
-      - key: MYSQL_PASSWORD
-        value: DPHhMBJuYlcQlaeZmXsFGgUZZLkqrhhX
-      - key: MYSQL_DATABASE
+      - key: MYSQLPASSWORD
+        value: jsMCBLUiFOYHjkIHwrjZKlSPTDhmtJDd
+      - key: MYSQLDATABASE
         value: railway
