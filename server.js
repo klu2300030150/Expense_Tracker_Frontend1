@@ -6,13 +6,24 @@ import mysql from 'mysql2/promise';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Database Configuration - Uses environment variables for cloud, falls back to local
-const DB_CONFIG = {
-  host: process.env.MYSQL_HOST || 'localhost',
-  port: parseInt(process.env.MYSQL_PORT || '3306'),
-  user: process.env.MYSQL_USER || 'root',
-  password: process.env.MYSQL_PASSWORD || 'Sreekar@8297',
-  database: process.env.MYSQL_DATABASE || 'expense_tracker'
+// Database Configuration - AWS RDS MySQL
+// Change USE_AWS_RDS to true to use AWS RDS, false for local MySQL
+const USE_AWS_RDS = false;
+
+const DB_CONFIG = USE_AWS_RDS ? {
+  // AWS RDS Configuration
+  host: 'expensetrackerbackend.cxy4ogqqgubd.eu-north-1.rds.amazonaws.com',
+  port: 3306,
+  user: 'admin',
+  password: 'Sreekar8297',
+  database: 'ExpenseTrackerBackend'
+} : {
+  // Local MySQL Configuration
+  host: 'localhost',
+  port: 3306,
+  user: 'root',
+  password: 'Sreekar@8297',
+  database: 'expense_tracker'
 };
 
 // Middleware - Enhanced CORS for all origins
