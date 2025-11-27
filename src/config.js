@@ -1,9 +1,8 @@
 // API Configuration
 // Backend connects to Railway MySQL database
-// Run: npm run server (to start backend on port 5000)
-// Run: npm run dev (to start frontend)
-// Or: npm start (to run both)
+// Production: Render.com backend
+// Local dev: http://localhost:5000
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://expense-tracker-frontend1-bh7z.onrender.com';
 
 export default API_BASE_URL;
