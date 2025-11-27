@@ -6,13 +6,13 @@ import mysql from 'mysql2/promise';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// LOCAL MySQL Configuration - Your credentials
+// Database Configuration - Uses environment variables for cloud, falls back to local
 const DB_CONFIG = {
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: 'Sreekar@8297',
-  database: 'expense_tracker'
+  host: process.env.MYSQL_HOST || 'localhost',
+  port: parseInt(process.env.MYSQL_PORT || '3306'),
+  user: process.env.MYSQL_USER || 'root',
+  password: process.env.MYSQL_PASSWORD || 'Sreekar@8297',
+  database: process.env.MYSQL_DATABASE || 'expense_tracker'
 };
 
 // Middleware - Enhanced CORS for all origins
