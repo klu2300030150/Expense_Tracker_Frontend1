@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
@@ -6,6 +5,15 @@ import mysql from 'mysql2/promise';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// LOCAL MySQL Configuration - Your credentials
+const DB_CONFIG = {
+  host: 'localhost',
+  port: 3306,
+  user: 'root',
+  password: 'Sreekar@8297',
+  database: 'expense_tracker'
+};
 
 // Middleware - Enhanced CORS for all origins
 app.use(cors({
@@ -21,27 +29,162 @@ app.use((req, res, next) => {
   next();
 });
 
-// MySQL Connection Pool
-const pool = mysql.createPool({
-  host: process.env.MYSQL_HOST,
-  port: parseInt(process.env.MYSQL_PORT || '3306'),
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+// MySQL Connection Pool (will be initialized after DB setup)
+let pool;
 
-// Test DB connection on startup
-pool.getConnection()
-  .then(conn => {
-    console.log('✅ Connected to Railway MySQL database');
-    conn.release();
-  })
-  .catch(err => {
-    console.error('❌ Database connection failed:', err.message);
-  });
+// Auto-create database and tables
+async function initializeDatabase() {
+  try {
+    // First connect without database to create it
+    const tempConn = await mysql.createConnection({
+      host: DB_CONFIG.host,
+      port: DB_CONFIG.port,
+      user: DB_CONFIG.user,
+      password: DB_CONFIG.password
+    });
+
+    // Create database if not exists
+    await tempConn.query(`CREATE DATABASE IF NOT EXISTS ${DB_CONFIG.database}`);
+    console.log('✅ Database "expense_tracker" ready');
+    await tempConn.end();
+
+    // Now create pool with database
+    pool = mysql.createPool({
+      ...DB_CONFIG,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0
+    });
+
+    // Create all tables
+    await createTables();
+    
+    // Add missing columns if they don't exist (for upgrades)
+    await addMissingColumns();
+    
+    console.log('✅ All tables ready');
+    console.log('✅ Connected to LOCAL MySQL database');
+
+  } catch (err) {
+    console.error('❌ Database initialization failed:', err.message);
+    console.error('Make sure MySQL is running on localhost with user "root" and password "Sreekar@8297"');
+    process.exit(1);
+  }
+}
+
+// Add missing columns to existing tables
+async function addMissingColumns() {
+  try {
+    // Check and add notes column
+    const [cols] = await pool.query(`SHOW COLUMNS FROM expenses LIKE 'notes'`);
+    if (cols.length === 0) {
+      await pool.query(`ALTER TABLE expenses ADD COLUMN notes TEXT`);
+      console.log('✅ Added notes column to expenses');
+    }
+    
+    // Check and add updated_at column  
+    const [cols2] = await pool.query(`SHOW COLUMNS FROM expenses LIKE 'updated_at'`);
+    if (cols2.length === 0) {
+      await pool.query(`ALTER TABLE expenses ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`);
+      console.log('✅ Added updated_at column to expenses');
+    }
+    
+    // Make category nullable
+    await pool.query(`ALTER TABLE expenses MODIFY COLUMN category VARCHAR(50)`);
+  } catch (err) {
+    console.log('Column update check:', err.message);
+  }
+}
+
+// Create all required tables
+async function createTables() {
+  const tables = [
+    `CREATE TABLE IF NOT EXISTS users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      username VARCHAR(100) NOT NULL,
+      email VARCHAR(100) UNIQUE NOT NULL,
+      password VARCHAR(255) NOT NULL,
+      phone_number VARCHAR(20),
+      currency VARCHAR(10) DEFAULT 'USD',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS categories (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(50) NOT NULL,
+      icon VARCHAR(50),
+      color VARCHAR(20),
+      user_id INT,
+      is_default BOOLEAN DEFAULT FALSE
+    )`,
+    `CREATE TABLE IF NOT EXISTS subcategories (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(50) NOT NULL,
+      category_id INT NOT NULL,
+      FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+    )`,
+    `CREATE TABLE IF NOT EXISTS expenses (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      amount DECIMAL(10,2) NOT NULL,
+      category VARCHAR(50),
+      subcategory VARCHAR(50),
+      description TEXT,
+      notes TEXT,
+      date DATE NOT NULL,
+      payment_method VARCHAR(30) DEFAULT 'cash',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )`,
+    `CREATE TABLE IF NOT EXISTS budgets (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      category VARCHAR(50) NOT NULL,
+      amount DECIMAL(10,2) NOT NULL,
+      period VARCHAR(20) DEFAULT 'monthly',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )`,
+    `CREATE TABLE IF NOT EXISTS activity_log (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      action VARCHAR(50) NOT NULL,
+      entity_type VARCHAR(50),
+      entity_id INT,
+      details TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )`
+  ];
+
+  for (const sql of tables) {
+    await pool.query(sql);
+  }
+
+  // Seed default categories if empty
+  const [cats] = await pool.query('SELECT COUNT(*) as count FROM categories WHERE is_default = TRUE');
+  if (cats[0].count === 0) {
+    const defaultCategories = [
+      ['Food & Dining', '🍔', '#FF6384', true],
+      ['Transportation', '🚗', '#36A2EB', true],
+      ['Shopping', '🛒', '#FFCE56', true],
+      ['Entertainment', '🎬', '#4BC0C0', true],
+      ['Bills & Utilities', '💡', '#9966FF', true],
+      ['Healthcare', '🏥', '#FF9F40', true],
+      ['Education', '📚', '#C9CBCF', true],
+      ['Travel', '✈️', '#7C4DFF', true],
+      ['Personal Care', '💅', '#FF6F61', true],
+      ['Other', '📦', '#808080', true]
+    ];
+    for (const [name, icon, color, isDefault] of defaultCategories) {
+      await pool.query(
+        'INSERT INTO categories (name, icon, color, is_default) VALUES (?, ?, ?, ?)',
+        [name, icon, color, isDefault]
+      );
+    }
+    console.log('✅ Default categories seeded');
+  }
+}
 
 // Helper: Generate simple token (includes usernId for extraction)
 function generateToken(userId) {
@@ -484,8 +627,11 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📊 API endpoints available at http://localhost:${PORT}/api`);
+// Initialize database then start server
+initializeDatabase().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📊 API endpoints available at http://localhost:${PORT}/api`);
+    console.log(`\n📌 Using LOCAL MySQL: root@localhost:3306/expense_tracker`);
+  });
 });
