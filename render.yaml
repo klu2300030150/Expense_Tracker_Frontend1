@@ -12,10 +12,10 @@ services:
       - key: MYSQLHOST
         value: gondola.proxy.rlwy.net
       - key: MYSQLPORT
-        value: 47595
+        value: 27737
       - key: MYSQLUSER
         value: root
       - key: MYSQLPASSWORD
-        value: jsMCBLUiFOYHjkIHwrjZKlSPTDhmtJDd
+        value: DPHhMBJuYlcQlaeZmXsFGgUZZLkqrhhX
       - key: MYSQLDATABASE
         value: railway
